@@ -3,7 +3,7 @@ export type ListingType = "sale" | "rent";
 /** Normalized listing used by the carousel template. Nothing else reaches the slides. */
 export interface CarouselListing {
   id: string;
-  ref: string; // EE-XXXXXX
+  ref: string; // e.g. ELV-AH-1212: 3–20 chars, A–Z, 0–9 and hyphens
   title: string; // English title
   propertyType: string; // Apartment, Villa, Office...
   listingType: ListingType;
@@ -65,7 +65,7 @@ export function fromCrmPayload(body: Record<string, any>): CarouselListing {
 /** Returns human-readable problems. Empty array = ready to render. */
 export function validateListing(l: CarouselListing): string[] {
   const errors: string[] = [];
-  if (!/^EE-\d{6}$/.test(l.ref)) errors.push(`Reference "${l.ref}" is not in EE-XXXXXX format.`);
+  if (!/^[A-Z0-9](?:[A-Z0-9-]{1,18})[A-Z0-9]$/.test(l.ref)) errors.push(`Reference "${l.ref}" is missing or has invalid characters.`);
   if (!l.location) errors.push("Location is missing.");
   if (!l.propertyType) errors.push("Property type is missing.");
   if (l.images.length < 3) errors.push(`Only ${l.images.length} published images. Select at least 3.`);

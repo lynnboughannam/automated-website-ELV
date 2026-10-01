@@ -52,10 +52,10 @@ body{background:#999;font-family:"Nunito Sans",sans-serif;color:var(--espresso);
 .stamp img{height:62px;width:auto;display:block}
 
 /* Reference key tag: the signature element, same corner on every slide */
-.tag{display:inline-flex;align-items:center;gap:22px;background:var(--sand);border:2px solid var(--sand-line);border-radius:14px;padding:18px 32px 18px 24px}
+.tag{display:inline-flex;align-items:center;gap:22px;background:var(--sand);border:2px solid var(--sand-line);border-radius:14px;padding:18px 32px 18px 24px;flex:none}
 .grommet{width:22px;height:22px;border-radius:50%;background:var(--linen);border:5px solid var(--tan);flex:none}
 .tag-label{font-weight:800;font-size:15px;letter-spacing:3px;text-transform:uppercase;color:var(--brown);line-height:1}
-.tag-num{font-weight:800;font-size:40px;letter-spacing:4px;color:var(--oak);line-height:1;margin-top:8px}
+.tag-num{font-weight:800;font-size:40px;letter-spacing:4px;color:var(--oak);line-height:1;margin-top:8px;white-space:nowrap}
 .tag-sm{padding:14px 26px 14px 20px;gap:18px}
 .tag-sm .tag-num{font-size:32px;letter-spacing:3px}
 .tag-sm .tag-label{font-size:13px}
@@ -187,7 +187,9 @@ function ctaSlide(l: CarouselListing) {
 }
 
 // Shrinks long area names (e.g. "Ain el Mreisseh") until they fit on one line.
-const FIT_SCRIPT = `document.fonts.ready.then(()=>{document.querySelectorAll(".place").forEach(el=>{let s=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth&&s>48){s-=2;el.style.fontSize=s+"px"}});document.body.dataset.ready="1"})`;
+// Shrinks long references (e.g. "ELV-AH-1212345") until the tag fits its spot: beside the price
+// (keeping a 40px gap), inside the CTA margins, or inside the photo-slide corner.
+const FIT_SCRIPT = `document.fonts.ready.then(()=>{document.querySelectorAll(".place").forEach(el=>{let s=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth&&s>48){s-=2;el.style.fontSize=s+"px"}});document.querySelectorAll(".tag").forEach(t=>{const n=t.querySelector(".tag-num"),p=t.parentElement;let room;if(p.matches(".card-foot,.details-foot")){t.style.display="none";room=p.clientWidth-t.previousElementSibling.getBoundingClientRect().width-40;t.style.display=""}else if(p.matches(".corner")){room=t.closest(".slide").clientWidth-112}else{room=p.clientWidth}const cs=getComputedStyle(n),s0=parseFloat(cs.fontSize),ls=parseFloat(cs.letterSpacing)/s0;let s=s0;while(t.getBoundingClientRect().width>room&&s>s0*.55){s-=1;n.style.fontSize=s+"px";n.style.letterSpacing=s*ls+"px"}});document.body.dataset.ready="1"})`;
 
 /** Full HTML document with every slide stacked. The renderer screenshots each <section.slide>. */
 export function buildCarouselHtml(l: CarouselListing): { html: string; slideCount: number } {

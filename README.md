@@ -22,12 +22,12 @@ This app has no database. The CRM owns the `post_id`, the post status, and idemp
 3. When rendering finishes, the app POSTs to `CRM_CALLBACK_URL` with headers
    `content-type: application/json` and `x-webhook-secret: <CAROUSEL_WEBHOOK_SECRET>`:
    ```json
-   { "post_id": "...", "ref": "EE-017331", "status": "pending_approval",
-     "slide_urls": ["https://….public.blob.vercel-storage.com/carousels/EE-017331/<post_id>/slide-01.jpg", "…"] }
+   { "post_id": "...", "ref": "ELV-AH-1212", "status": "pending_approval",
+     "slide_urls": ["https://….public.blob.vercel-storage.com/carousels/ELV-AH-1212/<post_id>/slide-01.jpg", "…"] }
    ```
    or, if rendering/upload failed:
    ```json
-   { "post_id": "...", "ref": "EE-017331", "status": "failed", "error": "<message>" }
+   { "post_id": "...", "ref": "ELV-AH-1212", "status": "failed", "error": "<message>" }
    ```
    The CRM must check `x-webhook-secret` and return 2xx. A failed or non-2xx callback is
    retried 3 times (after 2s, 5s, 10s); the final failure is logged with `console.error`
@@ -42,7 +42,7 @@ Sending the same `post_id` again overwrites that post's slides; use a new `post_
 | 202 | `{ "status": "queued", "post_id" }` | Accepted; result arrives via callback |
 | 400 | `{ "error" }` | Body is not JSON, or `post_id` is missing |
 | 401 | `{ "error": "Unauthorized" }` | Wrong or missing secret |
-| 422 | `{ "status": "rejected", "post_id", "ref", "problems": [...] }` | Listing not ready (bad ref, <3 photos, no location) — no callback is sent |
+| 422 | `{ "status": "rejected", "post_id", "ref", "problems": [...] }` | Listing not ready (missing or invalid ref, <3 photos, no location) — no callback is sent |
 
 ## Environment variables
 | Name | Purpose |
@@ -68,6 +68,9 @@ Sending the same `post_id` again overwrites that post's slides; use a new `post_
   It reads `published_images`, `reference_number`, `property_type`, `listing_type`,
   `location`, `price`, `size`, `bedrooms`, `bathrooms`, `amenities`, `tags` (with fallbacks).
   Owner fields are never read, so owner contact details cannot reach an image.
+- `lib/carousel/types.ts` → `validateListing()`: the reference (e.g. `ELV-AH-1212`) must be 3–20
+  characters of A–Z, 0–9 and hyphens, starting and ending with a letter or digit.
+  The slides are checked for references up to 14 characters; longer ones shrink the tag text further.
 - `lib/carousel/template.ts`: the design (CSS + slide markup).
 - `lib/carousel/storage.ts`: Vercel Blob upload.
 - `lib/carousel/callback.ts`: the CRM callback and its retries.
