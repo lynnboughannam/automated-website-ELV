@@ -1,6 +1,6 @@
 # Elevate Estates – listing carousel renderer
 
-**Cover style: Option 2 – Floating card** (full-bleed photo, white location card at the bottom).
+**Cover style: Option 1 – Framed** (location header, inset photo, Linen frame).
 
 Turns a published CRM listing into a branded Instagram carousel: 1440×1800 JPEGs (4:5, quality 92;
 laid out at 1080×1350 CSS px and rendered at 4/3 scale — Instagram's API accepts up to 1440px wide).

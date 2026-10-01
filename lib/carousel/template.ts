@@ -86,24 +86,26 @@ body{background:#999;font-family:"Nunito Sans",sans-serif;color:var(--espresso);
 .badge{font-weight:800;font-size:24px;padding:12px 26px;border-radius:40px;background:var(--white);color:var(--oak)}
 .badge.lux{background:var(--gold-bg);color:var(--gold)}
 
-/* Cover: floating card. Full-bleed photo, location card anchored at the bottom. */
+/* Cover: location-first. Light linen frame so the area name reads instantly in the feed. */
 .kicker{font-weight:700;font-size:28px;color:var(--tan);letter-spacing:.5px}
 .place{display:block;max-width:100%;overflow:hidden;font-family:"Playfair Display",serif;font-weight:700;font-size:108px;line-height:1;letter-spacing:-2px;color:#fff;margin-top:14px;white-space:nowrap}
 .price{font-weight:800;font-size:58px;color:#fff;line-height:1;letter-spacing:-.5px}
 .price small{font-weight:600;font-size:26px;color:rgba(255,255,255,.6);letter-spacing:0;margin-left:8px}
 .speclist{display:flex;font-weight:600;font-size:31px;color:rgba(46,31,14,.72)}
 .speclist span+span{margin-left:28px}
-.cover .scrim{position:absolute;left:0;right:0;top:0;height:240px;background:linear-gradient(rgba(0,0,0,.38),rgba(0,0,0,0))}
-.cover .wordmark{position:absolute;top:56px;left:60px;height:64px;width:auto}
-.cover .badges{top:56px;right:56px}
-.card{position:absolute;left:48px;right:48px;bottom:48px;background:var(--white);border-radius:24px;padding:46px 52px 44px}
-.card-loc{display:flex;align-items:center;gap:20px}
-.card-loc-text{flex:1;min-width:0}
-.pin{width:58px;height:74px;flex:none;color:var(--brown)}
-.card .place{color:var(--oak);font-size:112px;letter-spacing:-2.5px;margin-top:6px;padding-bottom:6px}
-.card-foot{margin-top:68px;display:flex;align-items:flex-end;justify-content:space-between}
-.card .price{color:var(--oak);font-size:58px;margin-top:16px}
-.card .price small{color:var(--tan)}
+.cover-top{position:absolute;left:0;right:0;top:0;height:330px;padding:58px 64px 0}
+.cover-top .row1{display:flex;align-items:center;justify-content:space-between}
+.cover-top .kicker{color:var(--brown)}
+.cover-top .mark{height:62px;width:auto;display:block}
+.loc{display:flex;align-items:center;gap:22px;margin-top:20px}
+.pin{width:62px;height:80px;flex:none;color:var(--brown)}
+.cover .place{color:var(--oak);font-size:136px;letter-spacing:-3px;margin-top:0;flex:1;min-width:0;padding-bottom:6px}
+.cover-photo{position:absolute;left:48px;right:48px;top:330px;height:790px;border-radius:20px;overflow:hidden;background:var(--sand)}
+.cover-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.cover-photo .badges{top:28px;right:28px}
+.cover-foot{position:absolute;left:64px;right:64px;bottom:52px;display:flex;align-items:flex-end;justify-content:space-between}
+.cover .price{color:var(--oak);font-size:58px;margin-top:18px}
+.cover .price small{color:var(--tan)}
 
 /* Details */
 .details{padding:190px 80px 64px;display:flex;flex-direction:column}
@@ -139,22 +141,23 @@ function coverSlide(l: CarouselListing) {
   const s = specs(l);
   return `
   <section class="slide cover">
-    <img class="photo" src="${esc(l.images[0] ?? "")}" alt="">
-    <div class="scrim"></div>
-    <img class="wordmark" src="data:image/png;base64,${ASSETS.logoWhite}" alt="Elevate Estates">
-    ${lux ? `<div class="badges"><span class="badge lux">Luxury</span></div>` : ""}
-    <div class="card">
-      <div class="card-loc">${PIN}<div class="card-loc-text">
+    <div class="cover-top">
+      <div class="row1">
         <div class="kicker">${esc(typeLine(l))}</div>
-        <div class="place">${esc(l.location)}</div>
-      </div></div>
-      <div class="card-foot">
-        <div>
-          ${s.length ? `<div class="speclist">${s.map((x) => `<span>${esc(x.value)}${x.unit ? " " + x.unit : " " + esc(x.label.toLowerCase())}</span>`).join("")}</div>` : ""}
-          <div class="price">${esc(money(l))}${l.price != null && l.listingType === "rent" ? "<small>/ month</small>" : ""}</div>
-        </div>
-        ${refTag(l.ref, "sm")}
+        <img class="mark" src="data:image/png;base64,${ASSETS.iconBrown}" alt="">
       </div>
+      <div class="loc">${PIN}<div class="place">${esc(l.location)}</div></div>
+    </div>
+    <div class="cover-photo">
+      <img class="photo" src="${esc(l.images[0] ?? "")}" alt="">
+      ${lux ? `<div class="badges"><span class="badge lux">Luxury</span></div>` : ""}
+    </div>
+    <div class="cover-foot">
+      <div>
+        ${s.length ? `<div class="speclist">${s.map((x) => `<span>${esc(x.value)}${x.unit ? " " + x.unit : " " + esc(x.label.toLowerCase())}</span>`).join("")}</div>` : ""}
+        <div class="price">${esc(money(l))}${l.price != null && l.listingType === "rent" ? "<small>/ month</small>" : ""}</div>
+      </div>
+      ${refTag(l.ref, "sm")}
     </div>
   </section>`;
 }
@@ -203,7 +206,7 @@ function ctaSlide(l: CarouselListing) {
 // Shrinks long references (e.g. "ELV-AH-1212345") until the tag fits its spot: beside the price
 // (keeping a 40px gap), inside the CTA margins, or inside the photo-slide corner.
 // Shrinks highlight chips (font, padding, gap together) until they end 48px above the price row.
-const FIT_SCRIPT = `document.fonts.ready.then(()=>{document.querySelectorAll(".place").forEach(el=>{let s=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth&&s>48){s-=2;el.style.fontSize=s+"px"}});document.querySelectorAll(".tag").forEach(t=>{const n=t.querySelector(".tag-num"),p=t.parentElement;let room;if(p.matches(".card-foot,.details-foot")){t.style.display="none";room=p.clientWidth-t.previousElementSibling.getBoundingClientRect().width-40;t.style.display=""}else if(p.matches(".corner")){room=t.closest(".slide").clientWidth-112}else{room=p.clientWidth}const cs=getComputedStyle(n),s0=parseFloat(cs.fontSize),ls=parseFloat(cs.letterSpacing)/s0;let s=s0;while(t.getBoundingClientRect().width>room&&s>s0*.55){s-=1;n.style.fontSize=s+"px";n.style.letterSpacing=s*ls+"px"}});document.querySelectorAll(".features").forEach(f=>{const ft=f.parentElement.querySelector(".details-foot"),box=f.querySelector(".chips"),chips=[...box.children],cs=getComputedStyle(chips[0]),fs=parseFloat(cs.fontSize),pv=parseFloat(cs.paddingTop),ph=parseFloat(cs.paddingLeft),g=parseFloat(getComputedStyle(box).rowGap);let k=1;while(ft.getBoundingClientRect().top-f.getBoundingClientRect().bottom<48&&k>.5){k-=.04;box.style.gap=g*k+"px";chips.forEach(c=>{c.style.fontSize=fs*k+"px";c.style.padding=pv*k+"px "+ph*k+"px"})}});document.body.dataset.ready="1"})`;
+const FIT_SCRIPT = `document.fonts.ready.then(()=>{document.querySelectorAll(".place").forEach(el=>{let s=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth&&s>48){s-=2;el.style.fontSize=s+"px"}});document.querySelectorAll(".tag").forEach(t=>{const n=t.querySelector(".tag-num"),p=t.parentElement;let room;if(p.matches(".cover-foot,.details-foot")){t.style.display="none";room=p.clientWidth-t.previousElementSibling.getBoundingClientRect().width-40;t.style.display=""}else if(p.matches(".corner")){room=t.closest(".slide").clientWidth-112}else{room=p.clientWidth}const cs=getComputedStyle(n),s0=parseFloat(cs.fontSize),ls=parseFloat(cs.letterSpacing)/s0;let s=s0;while(t.getBoundingClientRect().width>room&&s>s0*.55){s-=1;n.style.fontSize=s+"px";n.style.letterSpacing=s*ls+"px"}});document.querySelectorAll(".features").forEach(f=>{const ft=f.parentElement.querySelector(".details-foot"),box=f.querySelector(".chips"),chips=[...box.children],cs=getComputedStyle(chips[0]),fs=parseFloat(cs.fontSize),pv=parseFloat(cs.paddingTop),ph=parseFloat(cs.paddingLeft),g=parseFloat(getComputedStyle(box).rowGap);let k=1;while(ft.getBoundingClientRect().top-f.getBoundingClientRect().bottom<48&&k>.5){k-=.04;box.style.gap=g*k+"px";chips.forEach(c=>{c.style.fontSize=fs*k+"px";c.style.padding=pv*k+"px "+ph*k+"px"})}});document.body.dataset.ready="1"})`;
 
 /** Full HTML document with every slide stacked. The renderer screenshots each <section.slide>. */
 export function buildCarouselHtml(l: CarouselListing): { html: string; slideCount: number } {
