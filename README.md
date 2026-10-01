@@ -81,7 +81,7 @@ Sending the same `post_id` again overwrites that post's slides; use a new `post_
   characters of A–Z, 0–9 and hyphens, starting and ending with a letter or digit; the listing
   needs at least 1 published image, a location and a property type.
   The slides are checked for references up to 14 characters; longer ones shrink the tag text further.
-- `lib/carousel/template.ts`: the design (CSS + slide markup).
+- `lib/carousel/template.ts`: the design (CSS + slide markup). The contact number on the last slide is `CONTACT_PHONE`.
 - `lib/carousel/storage.ts`: Vercel Blob upload.
 - `lib/carousel/callback.ts`: the CRM callback and its retries.
 - Logos/fonts are inlined from `lib/carousel/assets.generated.ts`. If you replace the PNGs

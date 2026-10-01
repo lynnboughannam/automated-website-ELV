@@ -40,14 +40,18 @@ const highlights = (l: CarouselListing) => {
   return out.slice(0, MAX_HIGHLIGHTS);
 };
 
-const refTag =(ref: string, size: "sm" | "md" | "xl" = "md") => `
+const CONTACT_PHONE = "+961 71 991 088"; // shown on the CTA slide
+
+const keyTag = (label: string, value: string, size: "sm" | "md" | "xl" = "md") => `
   <div class="tag tag-${size}">
     <span class="grommet"></span>
     <div>
-      <div class="tag-label">Reference</div>
-      <div class="tag-num">${esc(ref)}</div>
+      <div class="tag-label">${esc(label)}</div>
+      <div class="tag-num">${esc(value)}</div>
     </div>
   </div>`;
+
+const refTag = (ref: string, size: "sm" | "md" | "xl" = "md") => keyTag("Reference", ref, size);
 
 const stamp = () => `<div class="stamp"><img src="data:image/png;base64,${ASSETS.iconWhite}" alt=""></div>`;
 
@@ -196,8 +200,8 @@ function ctaSlide(l: CarouselListing) {
   <section class="slide cta">
     <img class="logo" src="data:image/png;base64,${ASSETS.logoWhite}" alt="Elevate Estates">
     <h2>One reference.<br>One call.<br>Done.</h2>
-    <p class="ask">Send this reference to us on WhatsApp and we'll pull up the listing instantly.</p>
-    <div class="tagwrap">${refTag(l.ref, "xl")}</div>
+    <p class="ask">Message us on WhatsApp and we'll help you elevate.</p>
+    <div class="tagwrap">${keyTag("Call or WhatsApp", CONTACT_PHONE, "xl")}</div>
     <div class="site">elevateestateslb.com</div>
   </section>`;
 }
