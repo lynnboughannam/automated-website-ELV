@@ -42,9 +42,9 @@ export async function POST(req: Request) {
   // Answer the webhook immediately; render in the background so the CRM never times out.
   after(async () => {
     try {
-      const slides = await renderCarousel(listing);
+      const { slides, warnings } = await renderCarousel(listing);
       const slideUrls = await uploadSlides(postId, listing.ref, slides);
-      await notifyCrm({ post_id: postId, ref: listing.ref, status: "pending_approval", slide_urls: slideUrls });
+      await notifyCrm({ post_id: postId, ref: listing.ref, status: "pending_approval", slide_urls: slideUrls, warnings });
     } catch (e) {
       const error = (e instanceof Error ? e.message : String(e)).slice(0, 2000);
       await notifyCrm({ post_id: postId, ref: listing.ref, status: "failed", error });

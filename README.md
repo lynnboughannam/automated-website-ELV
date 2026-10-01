@@ -2,8 +2,14 @@
 
 **Cover style: Option 2 – Floating card** (full-bleed photo, white location card at the bottom).
 
-Turns a published CRM listing into a branded Instagram carousel (1080×1350 JPEGs):
-cover → up to 6 photos → details → CTA (max 9 slides). Slides are uploaded to Vercel Blob
+Turns a published CRM listing into a branded Instagram carousel: 1440×1800 JPEGs (4:5, quality 92;
+laid out at 1080×1350 CSS px and rendered at 4/3 scale — Instagram's API accepts up to 1440px wide).
+Slides: cover → one slide per extra photo (up to 6) → details → CTA. A listing with 1 photo
+gives 3 slides (cover, details, CTA); the maximum is 9.
+
+The details slide's "Highlights" chips are the listing's amenities, then its tags in Title Case
+(trimmed, empties and case-insensitive duplicates removed, max 12). The chips shrink step by step
+if they would run into the price row. The `luxury` tag also shows the Luxury badge on the cover. Slides are uploaded to Vercel Blob
 and the result is POSTed back to the CRM (Lovable Cloud), which stores it and tracks status.
 
 This app has no database. The CRM owns the `post_id`, the post status, and idempotency
@@ -23,8 +29,11 @@ This app has no database. The CRM owns the `post_id`, the post status, and idemp
    `content-type: application/json` and `x-webhook-secret: <CAROUSEL_WEBHOOK_SECRET>`:
    ```json
    { "post_id": "...", "ref": "ELV-AH-1212", "status": "pending_approval",
-     "slide_urls": ["https://….public.blob.vercel-storage.com/carousels/ELV-AH-1212/<post_id>/slide-01.jpg", "…"] }
+     "slide_urls": ["https://….public.blob.vercel-storage.com/carousels/ELV-AH-1212/<post_id>/slide-01.jpg", "…"],
+     "warnings": ["Photo 3 is only 800px wide; it may look blurry"] }
    ```
+   `warnings` is always present (empty array when there's nothing to report). A photo narrower
+   than 1080px still renders, but gets a warning so the CRM can flag it before approval.
    or, if rendering/upload failed:
    ```json
    { "post_id": "...", "ref": "ELV-AH-1212", "status": "failed", "error": "<message>" }
@@ -42,7 +51,7 @@ Sending the same `post_id` again overwrites that post's slides; use a new `post_
 | 202 | `{ "status": "queued", "post_id" }` | Accepted; result arrives via callback |
 | 400 | `{ "error" }` | Body is not JSON, or `post_id` is missing |
 | 401 | `{ "error": "Unauthorized" }` | Wrong or missing secret |
-| 422 | `{ "status": "rejected", "post_id", "ref", "problems": [...] }` | Listing not ready (missing or invalid ref, <3 photos, no location) — no callback is sent |
+| 422 | `{ "status": "rejected", "post_id", "ref", "problems": [...] }` | Listing not ready: invalid reference, no published images, no location or no property type — no callback is sent |
 
 ## Environment variables
 | Name | Purpose |
@@ -69,7 +78,8 @@ Sending the same `post_id` again overwrites that post's slides; use a new `post_
   `location`, `price`, `size`, `bedrooms`, `bathrooms`, `amenities`, `tags` (with fallbacks).
   Owner fields are never read, so owner contact details cannot reach an image.
 - `lib/carousel/types.ts` → `validateListing()`: the reference (e.g. `ELV-AH-1212`) must be 3–20
-  characters of A–Z, 0–9 and hyphens, starting and ending with a letter or digit.
+  characters of A–Z, 0–9 and hyphens, starting and ending with a letter or digit; the listing
+  needs at least 1 published image, a location and a property type.
   The slides are checked for references up to 14 characters; longer ones shrink the tag text further.
 - `lib/carousel/template.ts`: the design (CSS + slide markup).
 - `lib/carousel/storage.ts`: Vercel Blob upload.

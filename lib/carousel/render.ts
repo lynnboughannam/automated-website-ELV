@@ -18,13 +18,18 @@ async function launch(): Promise<Browser> {
   });
 }
 
-/** Renders every slide to a JPEG buffer, in order. */
-export async function renderCarousel(listing: CarouselListing): Promise<Buffer[]> {
+// CSS lays slides out at 1080×1350; rendering at 4/3 device pixels gives 1440×1800 JPEGs
+// (Instagram's API accepts up to 1440px wide). Photos narrower than the slide may look soft.
+const SCALE = 4 / 3;
+const MIN_PHOTO_WIDTH = SLIDE_W;
+
+/** Renders every slide to a JPEG buffer, in order, plus warnings about low-resolution photos. */
+export async function renderCarousel(listing: CarouselListing): Promise<{ slides: Buffer[]; warnings: string[] }> {
   const { html } = buildCarouselHtml(listing);
   const browser = await launch();
   try {
     const page = await browser.newPage();
-    await page.setViewport({ width: SLIDE_W, height: SLIDE_H, deviceScaleFactor: 1 });
+    await page.setViewport({ width: SLIDE_W, height: SLIDE_H, deviceScaleFactor: SCALE });
     // "load" fires after every <img> (the listing photos) has finished loading
     await page.setContent(html, { waitUntil: "load", timeout: 45_000 });
     await page.waitForSelector("body[data-ready]", { timeout: 15_000 });
@@ -34,13 +39,19 @@ export async function renderCarousel(listing: CarouselListing): Promise<Buffer[]
     );
     if (broken.length) throw new Error(`Photos failed to load: ${broken.join(", ")}`);
 
+    // img.photo elements appear in listing order: cover = photo 1, then photo slides.
+    const widths = await page.$$eval("img.photo", (imgs) => imgs.map((i) => (i as HTMLImageElement).naturalWidth));
+    const warnings = widths.flatMap((w, i) =>
+      w < MIN_PHOTO_WIDTH ? [`Photo ${i + 1} is only ${w}px wide; it may look blurry`] : []
+    );
+
     const slides = await page.$$("section.slide");
     const out: Buffer[] = [];
     for (const s of slides) {
       // Instagram's API only accepts JPEG for feed images
-      out.push(Buffer.from(await s.screenshot({ type: "jpeg", quality: 90 })));
+      out.push(Buffer.from(await s.screenshot({ type: "jpeg", quality: 92 })));
     }
-    return out;
+    return { slides: out, warnings };
   } finally {
     await browser.close();
   }

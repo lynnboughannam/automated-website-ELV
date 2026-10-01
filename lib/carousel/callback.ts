@@ -1,5 +1,5 @@
 export type CallbackBody =
-  | { post_id: string; ref: string; status: "pending_approval"; slide_urls: string[] }
+  | { post_id: string; ref: string; status: "pending_approval"; slide_urls: string[]; warnings: string[] }
   | { post_id: string; ref: string; status: "failed"; error: string };
 
 const RETRY_WAITS_MS = [2000, 5000, 10000];

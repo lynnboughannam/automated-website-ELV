@@ -68,6 +68,6 @@ export function validateListing(l: CarouselListing): string[] {
   if (!/^[A-Z0-9](?:[A-Z0-9-]{1,18})[A-Z0-9]$/.test(l.ref)) errors.push(`Reference "${l.ref}" is missing or has invalid characters.`);
   if (!l.location) errors.push("Location is missing.");
   if (!l.propertyType) errors.push("Property type is missing.");
-  if (l.images.length < 3) errors.push(`Only ${l.images.length} published images. Select at least 3.`);
+  if (l.images.length < 1) errors.push("No published images.");
   return errors;
 }

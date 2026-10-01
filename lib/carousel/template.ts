@@ -23,7 +23,24 @@ const specs = (l: CarouselListing) =>
     l.sizeSqm != null && { value: `${l.sizeSqm}`, unit: "m²", label: "Built-up area" },
   ].filter(Boolean) as { value: string; unit?: string; label: string }[];
 
-const refTag = (ref: string, size: "sm" | "md" | "xl" = "md") => `
+const MAX_HIGHLIGHTS = 12;
+const titleCase = (s: string) => s.replace(/(^|[\s\-/])(\p{L})/gu, (_, sep, c) => sep + c.toUpperCase());
+
+/** Amenities first, then tags in Title Case; trimmed, no empties, no case-insensitive duplicates. */
+const highlights = (l: CarouselListing) => {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of [...l.amenities, ...l.tags.map(titleCase)]) {
+    const v = raw.trim();
+    const key = v.toLowerCase();
+    if (!v || seen.has(key)) continue;
+    seen.add(key);
+    out.push(v);
+  }
+  return out.slice(0, MAX_HIGHLIGHTS);
+};
+
+const refTag =(ref: string, size: "sm" | "md" | "xl" = "md") => `
   <div class="tag tag-${size}">
     <span class="grommet"></span>
     <div>
@@ -41,7 +58,7 @@ const CSS = `
 @font-face{font-family:"Nunito Sans";font-weight:600;src:url(data:font/woff2;base64,${ASSETS.nunito600}) format("woff2")}
 @font-face{font-family:"Nunito Sans";font-weight:700;src:url(data:font/woff2;base64,${ASSETS.nunito700}) format("woff2")}
 @font-face{font-family:"Nunito Sans";font-weight:800;src:url(data:font/woff2;base64,${ASSETS.nunito800}) format("woff2")}
-:root{--brown:#7A5230;--oak:#4E3219;--tan:#A87850;--linen:#EDE8E0;--sand:#EFE3D5;--sand-line:#D4B89A;--espresso:#2E1F0E;--white:#FAF7F3;--gold-bg:#FAF0DC;--gold:#7A5A0B}
+:root{--brown:#7A5230;--oak:#4E3219;--tan:#A87850;--linen:#EDE8E0;--sand:#EFE3D5;--espresso:#2E1F0E;--white:#FAF7F3;--gold-bg:#FAF0DC;--gold:#7A5A0B}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#999;font-family:"Nunito Sans",sans-serif;color:var(--espresso);-webkit-font-smoothing:antialiased}
 .slide{width:${SLIDE_W}px;height:${SLIDE_H}px;position:relative;overflow:hidden;background:var(--linen)}
@@ -52,15 +69,15 @@ body{background:#999;font-family:"Nunito Sans",sans-serif;color:var(--espresso);
 .stamp img{height:62px;width:auto;display:block}
 
 /* Reference key tag: the signature element, same corner on every slide */
-.tag{display:inline-flex;align-items:center;gap:22px;background:var(--sand);border:2px solid var(--sand-line);border-radius:14px;padding:18px 32px 18px 24px;flex:none}
-.grommet{width:22px;height:22px;border-radius:50%;background:var(--linen);border:5px solid var(--tan);flex:none}
+.tag{display:inline-flex;align-items:center;gap:22px;background:var(--sand);border-radius:14px;padding:18px 32px 18px 24px;flex:none}
+.grommet{width:22px;height:22px;border-radius:50%;background:var(--tan);flex:none}
 .tag-label{font-weight:800;font-size:15px;letter-spacing:3px;text-transform:uppercase;color:var(--brown);line-height:1}
 .tag-num{font-weight:800;font-size:40px;letter-spacing:4px;color:var(--oak);line-height:1;margin-top:8px;white-space:nowrap}
 .tag-sm{padding:14px 26px 14px 20px;gap:18px}
 .tag-sm .tag-num{font-size:32px;letter-spacing:3px}
 .tag-sm .tag-label{font-size:13px}
 .tag-xl{padding:30px 52px 30px 38px;gap:34px;border-radius:20px}
-.tag-xl .grommet{width:34px;height:34px;border-width:7px}
+.tag-xl .grommet{width:34px;height:34px}
 .tag-xl .tag-label{font-size:20px;letter-spacing:4px}
 .tag-xl .tag-num{font-size:84px;letter-spacing:7px;margin-top:12px}
 .corner{position:absolute;right:56px;bottom:56px}
@@ -75,7 +92,7 @@ body{background:#999;font-family:"Nunito Sans",sans-serif;color:var(--espresso);
 .price{font-weight:800;font-size:58px;color:#fff;line-height:1;letter-spacing:-.5px}
 .price small{font-weight:600;font-size:26px;color:rgba(255,255,255,.6);letter-spacing:0;margin-left:8px}
 .speclist{display:flex;font-weight:600;font-size:31px;color:rgba(46,31,14,.72)}
-.speclist span+span{border-left:2px solid rgba(122,82,48,.25);margin-left:22px;padding-left:22px}
+.speclist span+span{margin-left:28px}
 .cover .scrim{position:absolute;left:0;right:0;top:0;height:240px;background:linear-gradient(rgba(0,0,0,.38),rgba(0,0,0,0))}
 .cover .wordmark{position:absolute;top:56px;left:60px;height:64px;width:auto}
 .cover .badges{top:56px;right:56px}
@@ -84,8 +101,7 @@ body{background:#999;font-family:"Nunito Sans",sans-serif;color:var(--espresso);
 .card-loc-text{flex:1;min-width:0}
 .pin{width:58px;height:74px;flex:none;color:var(--brown)}
 .card .place{color:var(--oak);font-size:112px;letter-spacing:-2.5px;margin-top:6px;padding-bottom:6px}
-.card hr{border:0;height:2px;background:rgba(122,82,48,.15);margin:30px 0 30px}
-.card-foot{display:flex;align-items:flex-end;justify-content:space-between}
+.card-foot{margin-top:68px;display:flex;align-items:flex-end;justify-content:space-between}
 .card .price{color:var(--oak);font-size:58px;margin-top:16px}
 .card .price small{color:var(--tan)}
 
@@ -94,16 +110,15 @@ body{background:#999;font-family:"Nunito Sans",sans-serif;color:var(--espresso);
 .details .logo{position:absolute;top:72px;left:80px;height:60px}
 .details .kicker{color:var(--brown)}
 .details .place{color:var(--oak);font-size:156px;letter-spacing:-3px;margin-top:12px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:96px}
-.cell{border-top:3px solid var(--brown);padding-top:22px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:124px}
 .cell .v{font-family:"Playfair Display",serif;font-weight:700;font-size:148px;line-height:1;color:var(--oak);letter-spacing:-2px}
 .cell .v small{font-family:"Nunito Sans",sans-serif;font-weight:700;font-size:34px;letter-spacing:0;margin-left:6px;color:var(--brown)}
 .cell .l{font-weight:700;font-size:28px;color:var(--tan);margin-top:14px}
 .features{margin-top:96px}
 .features h3{font-weight:700;font-size:28px;color:var(--brown);margin-bottom:20px}
 .chips{display:flex;flex-wrap:wrap;gap:14px}
-.chip{background:var(--white);border:1.5px solid rgba(122,82,48,.25);color:var(--oak);font-weight:700;font-size:28px;padding:14px 30px;border-radius:40px}
-.details-foot{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;border-top:1.5px solid rgba(122,82,48,.2);padding-top:36px}
+.chip{background:var(--white);color:var(--oak);white-space:nowrap;font-weight:700;font-size:28px;padding:14px 30px;border-radius:40px}
+.details-foot{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;padding-top:48px}
 .details-foot .lbl{font-weight:700;font-size:24px;color:var(--tan)}
 .details-foot .price{color:var(--oak);font-size:66px;margin-top:10px}
 .details-foot .price small{color:var(--tan)}
@@ -114,8 +129,7 @@ body{background:#999;font-family:"Nunito Sans",sans-serif;color:var(--espresso);
 .cta h2{font-family:"Playfair Display",serif;font-weight:700;font-size:112px;line-height:1.02;letter-spacing:-2.5px;color:#fff;margin-top:110px}
 .cta .ask{font-weight:600;font-size:36px;line-height:1.45;color:rgba(255,255,255,.82);margin-top:56px;max-width:840px}
 .cta .tagwrap{margin-top:52px}
-.cta .tag{border-color:var(--sand)}
-.cta .site{margin-top:auto;font-weight:700;font-size:32px;color:#fff;letter-spacing:.5px;border-top:1.5px solid rgba(255,255,255,.25);padding-top:36px}
+.cta .site{margin-top:auto;font-weight:700;font-size:32px;color:#fff;letter-spacing:.5px;padding-top:48px}
 `;
 
 const PIN = `<svg class="pin" viewBox="0 0 20 26" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M10 0C4.5 0 0 4.4 0 9.9 0 17.3 10 26 10 26s10-8.7 10-16.1C20 4.4 15.5 0 10 0zm0 13.6a3.7 3.7 0 1 1 0-7.4 3.7 3.7 0 0 1 0 7.4z"/></svg>`;
@@ -134,7 +148,6 @@ function coverSlide(l: CarouselListing) {
         <div class="kicker">${esc(typeLine(l))}</div>
         <div class="place">${esc(l.location)}</div>
       </div></div>
-      <hr>
       <div class="card-foot">
         <div>
           ${s.length ? `<div class="speclist">${s.map((x) => `<span>${esc(x.value)}${x.unit ? " " + x.unit : " " + esc(x.label.toLowerCase())}</span>`).join("")}</div>` : ""}
@@ -157,7 +170,7 @@ function photoSlide(l: CarouselListing, src: string) {
 
 function detailsSlide(l: CarouselListing) {
   const s = specs(l);
-  const feats = l.amenities.slice(0, 8);
+  const feats = highlights(l);
   return `
   <section class="slide details">
     <img class="logo" src="data:image/png;base64,${ASSETS.logoBrown}" alt="Elevate Estates">
@@ -189,7 +202,8 @@ function ctaSlide(l: CarouselListing) {
 // Shrinks long area names (e.g. "Ain el Mreisseh") until they fit on one line.
 // Shrinks long references (e.g. "ELV-AH-1212345") until the tag fits its spot: beside the price
 // (keeping a 40px gap), inside the CTA margins, or inside the photo-slide corner.
-const FIT_SCRIPT = `document.fonts.ready.then(()=>{document.querySelectorAll(".place").forEach(el=>{let s=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth&&s>48){s-=2;el.style.fontSize=s+"px"}});document.querySelectorAll(".tag").forEach(t=>{const n=t.querySelector(".tag-num"),p=t.parentElement;let room;if(p.matches(".card-foot,.details-foot")){t.style.display="none";room=p.clientWidth-t.previousElementSibling.getBoundingClientRect().width-40;t.style.display=""}else if(p.matches(".corner")){room=t.closest(".slide").clientWidth-112}else{room=p.clientWidth}const cs=getComputedStyle(n),s0=parseFloat(cs.fontSize),ls=parseFloat(cs.letterSpacing)/s0;let s=s0;while(t.getBoundingClientRect().width>room&&s>s0*.55){s-=1;n.style.fontSize=s+"px";n.style.letterSpacing=s*ls+"px"}});document.body.dataset.ready="1"})`;
+// Shrinks highlight chips (font, padding, gap together) until they end 48px above the price row.
+const FIT_SCRIPT = `document.fonts.ready.then(()=>{document.querySelectorAll(".place").forEach(el=>{let s=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth&&s>48){s-=2;el.style.fontSize=s+"px"}});document.querySelectorAll(".tag").forEach(t=>{const n=t.querySelector(".tag-num"),p=t.parentElement;let room;if(p.matches(".card-foot,.details-foot")){t.style.display="none";room=p.clientWidth-t.previousElementSibling.getBoundingClientRect().width-40;t.style.display=""}else if(p.matches(".corner")){room=t.closest(".slide").clientWidth-112}else{room=p.clientWidth}const cs=getComputedStyle(n),s0=parseFloat(cs.fontSize),ls=parseFloat(cs.letterSpacing)/s0;let s=s0;while(t.getBoundingClientRect().width>room&&s>s0*.55){s-=1;n.style.fontSize=s+"px";n.style.letterSpacing=s*ls+"px"}});document.querySelectorAll(".features").forEach(f=>{const ft=f.parentElement.querySelector(".details-foot"),box=f.querySelector(".chips"),chips=[...box.children],cs=getComputedStyle(chips[0]),fs=parseFloat(cs.fontSize),pv=parseFloat(cs.paddingTop),ph=parseFloat(cs.paddingLeft),g=parseFloat(getComputedStyle(box).rowGap);let k=1;while(ft.getBoundingClientRect().top-f.getBoundingClientRect().bottom<48&&k>.5){k-=.04;box.style.gap=g*k+"px";chips.forEach(c=>{c.style.fontSize=fs*k+"px";c.style.padding=pv*k+"px "+ph*k+"px"})}});document.body.dataset.ready="1"})`;
 
 /** Full HTML document with every slide stacked. The renderer screenshots each <section.slide>. */
 export function buildCarouselHtml(l: CarouselListing): { html: string; slideCount: number } {
